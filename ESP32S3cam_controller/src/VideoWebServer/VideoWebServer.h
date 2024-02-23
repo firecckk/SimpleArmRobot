@@ -1,0 +1,1 @@
+void VideoWebServer_setup();

@@ -1,0 +1,24 @@
+#include "MotionProfile.h"
+
+/**
+ * Initialization
+ *
+ * @param int aVelocityMax maximum velocity (units/s)
+ * @param int aAccelerationMax maximum acceleration (units/s^2)
+ * @param short aMethod method of profile generation (1 = trapezoidal)
+ * @param int aSampleTime sample time (ms)
+ */
+MotionProfile trapezoidalProfile = new MotionProfile(200, 100, 1, 20);
+
+/**
+ * Usage
+ */
+ // Update setpoint for profile calculation and retrieve calculated setpoint
+ float finalSetpoint = 1000;
+ float setpoint = trapezoidalProfile->update(finalSetpoint)
+
+ // Check if profile is finished
+ if (trapezoidalProfile->getFinished()) {};
+
+ // Reset internal state
+ trapezoidalProfile->reset();
