@@ -4,6 +4,7 @@
 #include "Motor/ServoMotor.h"
 #include "Model/MotionProfile.h"
 #include "BasicController.h"
+#include "MqttClient/MqttClient.h"
 
 #define SAMPLE_TIME 20 // ms
 
@@ -38,6 +39,8 @@ void armReset() {
 void setup() {
   // setup video stream service
   VideoWebServer_setup();
+  // setup mqtt client
+  MqttClientSetup();
   // setup pwm module i2c pin
   PWMDriver::setup(21, 47); // SDA=21, SCL=47
   // init controller
@@ -51,6 +54,7 @@ void setup() {
 }
 
 void loop() {
+  MqttClientLoop();
   for(uint8_t i=0; i<6; i++) controller[i]->update();
   delay(SAMPLE_TIME); // 20ms defined by trapzoidal model.
 }
