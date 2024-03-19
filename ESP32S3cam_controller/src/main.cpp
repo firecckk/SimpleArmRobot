@@ -5,6 +5,7 @@
 #include "Model/MotionProfile.h"
 #include "BasicController.h"
 #include "MqttClient/MqttClient.h"
+#include "Model/state.h"
 
 #define SAMPLE_TIME 20 // ms
 
@@ -17,12 +18,12 @@ ServoMotor joint4(4, 100, 500);
 ServoMotor gripper(5, 100, 500);
 
 // trapzoidal profile config;
-MotionProfile p0(30, 10, 1, SAMPLE_TIME); // velocity, accelration, method=trapzoidal, sample time.
-MotionProfile p1(30, 10, 1, SAMPLE_TIME);
-MotionProfile p2(30, 10, 1, SAMPLE_TIME);
-MotionProfile p3(30, 10, 1, SAMPLE_TIME);
-MotionProfile p4(30, 10, 1, SAMPLE_TIME);
-MotionProfile p5(30, 10, 1, SAMPLE_TIME);
+MotionProfile p0(60, 60, 1, SAMPLE_TIME); // velocity, accelration, method=trapzoidal, sample time.
+MotionProfile p1(60, 60, 1, SAMPLE_TIME);
+MotionProfile p2(60, 60, 1, SAMPLE_TIME);
+MotionProfile p3(60, 60, 1, SAMPLE_TIME);
+MotionProfile p4(60, 60, 1, SAMPLE_TIME);
+MotionProfile p5(60, 60, 1, SAMPLE_TIME);
 
 BasicController * controller[6];
 
@@ -53,8 +54,15 @@ void setup() {
   armReset();
 }
 
+void update_controller() {
+  controller[0]->moveTo(state::get_yaw());
+  controller[3]->moveTo(state::get_pitch());
+  controller[4]->moveTo(state::get_roll());
+  for(uint8_t i=0; i<6; i++) controller[i]->update();
+}
+
 void loop() {
   MqttClientLoop();
-  for(uint8_t i=0; i<6; i++) controller[i]->update();
-  delay(SAMPLE_TIME); // 20ms defined by trapzoidal model.
+  update_controller();
+  delay(SAMPLE_TIME); // 20ms defined by trapzoidal model. (could be improved move accurate)
 }

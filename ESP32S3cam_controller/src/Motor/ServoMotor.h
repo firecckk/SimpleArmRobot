@@ -14,7 +14,7 @@ class ServoMotor {
     // Destructor
     ~ServoMotor();
 
-    void setAngle(uint8_t angle);
+    void setAngle(float angle);
 
 };
 
