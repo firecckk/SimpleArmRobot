@@ -10,7 +10,7 @@
 #define SAMPLE_TIME 20 // ms
 
 // Motor calibration
-ServoMotor joint0(0, 120, 475); // motor number and its calibration value(pulse count at 0 degree and pulse length at 180 degree)
+ServoMotor joint0(0, 120, 480); // motor number and its calibration value(pulse count at 0 degree and pulse length at 180 degree)
 ServoMotor joint1(1, 125, 475, true);
 ServoMotor joint2(2, 135, 475);
 ServoMotor joint3(3, 110, 480, true); //invert
@@ -29,7 +29,7 @@ BasicController * controller[6];
 
 // default ready state
 void armReset() {
-  //state::jointAngles[0] = 90;//90
+  state::jointAngles[0] = 90;//90
   //state::jointAngles[1] = 180; //10
   //state::jointAngles[2] = 0; //15
   //state::jointAngles[3] = 0; //175
