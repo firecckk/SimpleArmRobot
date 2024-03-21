@@ -1,5 +1,4 @@
 #include "MqttClient.h"
-#include "../Model/state.h"
 
 // MQTT Broker
 const char *mqtt_broker = "192.168.31.22";
@@ -52,6 +51,9 @@ void solveForVectors(char * str, unsigned int len) {
             case 'm':
             vector = &state::movement;
             break;
+            case 'd':
+            vector = &state::debug;
+            break;
         }
         str++;
         vector->x = std::strtod(str, &end);
@@ -76,6 +78,7 @@ void callback(char *topic, byte *payload, unsigned int length) {
     Serial.println();
     Serial.println("-----------------------");
     solveForVectors((char *) payload, length);
+    state::require_update = true;
 }
 
 void MqttClientLoop() {
