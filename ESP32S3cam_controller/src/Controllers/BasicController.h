@@ -1,5 +1,5 @@
-#include "Motor/ServoMotor.h"
-#include "Model/MotionProfile.h"
+#include "../Motor/ServoMotor.h"
+#include "MotionProfile.h"
 
 // a motor can switch between different type of controllers.
 class BasicController {
@@ -7,12 +7,15 @@ class BasicController {
         BasicController(ServoMotor * joint, MotionProfile * profile);
         ~BasicController();
         void update();
-        void moveTo(uint8_t angle);
-        uint8_t getCurrentAngle();
+        void moveTo(float angle);
+        float getCurrentAngle();
+        void setAngleRange(float min_angle, float max_angle);
 
     private:
         ServoMotor * joint;
         MotionProfile * profile;
-        uint8_t target_angle;
-        uint8_t current_angle;
+        float target_angle;
+        float current_angle;
+        float min_angle;
+        float max_angle;
 };
