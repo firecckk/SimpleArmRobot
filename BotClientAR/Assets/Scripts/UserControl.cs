@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 using uPLibrary.Networking.M2Mqtt;
 using uPLibrary.Networking.M2Mqtt.Messages;
 using M2MqttUnity;
@@ -14,9 +15,15 @@ namespace M2MqttUnity.Client
         [Tooltip("Left joystick to control movement")]
         [SerializeField] public FixedJoystick joystick;
         [SerializeField] public Camera player;
+        //[SerializeField] public InputField addressInputField;
 
         //string topic = "emqx/control";
         string topic = "M2MQTT_Unity/test";
+
+        int position_scale_rate = 1;
+
+        Vector3 base_orientation, base_position;
+        bool resetPosition=true;
 
         Vector3 move, orientation, position;
         bool grip = false;
@@ -27,6 +34,14 @@ namespace M2MqttUnity.Client
             requireUpdate_gripper = false;
 
         private List<string> eventMessages = new List<string>();
+
+        //public void SetBrokerAddress(string brokerAddress)
+        //{
+        //    if (addressInputField)
+        //    {
+        //        this.brokerAddress = brokerAddress;
+        //    }
+        //}
 
         public void toggleGripper()
         {
@@ -43,9 +58,21 @@ namespace M2MqttUnity.Client
             return v;
         }
 
+        // helper function, same as Arduino's map function
+        public double Map(double x, double in_min, double in_max, double out_min, double out_max)
+        {
+            var output = (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+            if (output > out_max) output = out_max;
+            else if (output < out_min) output = out_min;
+            return output;
+        }
+
         void updateJoystickInput()
         {
             Vector3 move = Vector3.forward * joystick.Vertical + Vector3.right * joystick.Horizontal; // x, 0, y
+            var tmp = move.y;
+            move.y = move.z;
+            move.z = tmp;
             if (!(this.move == roundVector(ref move)))
             {
                 requireUpdate_move = true;
@@ -56,8 +83,14 @@ namespace M2MqttUnity.Client
 
         void updateSensorInput()
         {
-            Vector3 orientation = player.transform.rotation.eulerAngles; // pitch, yaw, roll
-            Vector3 position = player.transform.position;
+            if(resetPosition)
+            {
+                this.base_position = player.transform.position * position_scale_rate;
+                this.base_orientation = player.transform.rotation.eulerAngles;
+                resetPosition = false;
+            }
+            Vector3 orientation = player.transform.rotation.eulerAngles - this.base_orientation; // pitch, yaw, roll
+            Vector3 position = player.transform.position * position_scale_rate - this.base_position;
             //Debug.Log("orientation: " + orientation);
             //Debug.Log("position: " + position);
             if (!(roundVector(ref orientation) == this.orientation))
@@ -87,22 +120,25 @@ namespace M2MqttUnity.Client
             updateSensorInput();
             updateJoystickInput();
         }
-
-        bool half_update_rate = true;
+        
+        short one_quard_update = 4;
         void FixedUpdate()
         {
-            // 25 fps
-            half_update_rate = half_update_rate ? false : true;
-            if (half_update_rate) return;
+            // 10 fps
+            if (one_quard_update == 4)
+            {
+                one_quard_update = 0;
+            }
+            else {
+                one_quard_update++;
+                return;
+            }
 
             if (client != null)
             {
+                Vector3 orientation_result = new Vector3(90f, 90f, 90f);
+                Vector3 position_result = new Vector3(90f, 90f, 90f);
                 string content = "";
-                if(requireUpdate_gripper)
-                {
-                    requireUpdate_gripper = false;
-                    content = this.grip ? "u" : "g"; // ungrip, grip
-                }
                 if(requireUpdate_move)
                 {
                     requireUpdate_move = false;
@@ -112,18 +148,74 @@ namespace M2MqttUnity.Client
                 {
                     requireUpdate_orientation = false;
                     // pitch, yaw, roll 
-                    Vector3 result = new Vector3(90f, 90f, 90f);
-                    result = this.orientation + result;
-                    result.x = result.x % 360;
-                    result.y = result.y % 360;
-                    result.z = result.z % 360;
-                    content += "o" + result.ToString("F2").Replace("(","").Replace(")", "").Replace(" ", "");
+                    orientation_result = this.orientation + orientation_result;
+                    orientation_result.x = 180 - (float) Map(orientation_result.x%360, 0, 180, 0, 180);
+                    // yaw is determined by position of cell phone now.
+                    //orientation_result.y = 180 - (float) Map(orientation_result.y%360, 0, 180, 0, 180);
+                    if (this.position.z != 0)
+                    {
+                        orientation_result.y = Mathf.Atan(this.position.x / this.position.z) + Mathf.PI/2;
+                        orientation_result.y = 180 / Mathf.PI * orientation_result.y;
+                        orientation_result.y = 180 - (float) Map(orientation_result.y % 360, 0, 180, 0, 180);
+                        orientation_result.z = 180 - (float) Map(orientation_result.z%360, 0, 180, 0, 180);
+                        content += "o" + orientation_result.ToString("F2").Replace("(","").Replace(")", "").Replace(" ", "");
+                    }
                 }
                 if (requireUpdate_position)
                 {
                     requireUpdate_position = false;
-                    // distance, height
-                    content += "p" + this.position.ToString("F2").Replace("(", "").Replace(")", "").Replace(" ", "");
+                    // l1 l2 are length of robotic arm.
+                    var l1 = 100; var l2 = 145;
+                    var min_distance = Mathf.Sqrt(l1 * l1 + l2 * l2);
+                    var max_distance = l1+l2;
+                    // x is useless, y is height, z is depth
+                    Debug.Log("position: " + this.position);
+                    position_result.x = 0;
+                    position_result.y = (float) Map(this.position.y, -0.3, 0.3, -245, 245);
+                    position_result.z = Mathf.Sqrt(this.position.x * this.position.x + this.position.z * this.position.z);
+                    position_result.z = (float) Map(position_result.z, -0.3, 0.3, -245, 245);
+                    //apply anti deadzone
+                    //var anti_deadzone = 50;
+                    //converted_position.y += converted_position.y < anti_deadzone && converted_position.y >= 0 ? anti_deadzone : -anti_deadzone;
+                    //converted_position.z += converted_position.z < anti_deadzone && converted_position.z >= 0 ? anti_deadzone : -anti_deadzone;
+
+                    var distance = Mathf.Sqrt(position_result.y * position_result.y + position_result.z * position_result.z);
+                    Debug.Log("converted position: " + position_result);
+                    // in order to make sure inverse kinemtic works, min < depth < max
+                    if (this.position.z == 0) { } // avoid singularity
+                    else
+                    {
+                        if (this.position.z < 0)
+                        {
+                            // reset arm
+                            //content += "p0,145,-100";
+                            position_result.y = 145;
+                            position_result.z = -100;
+                        }
+                        else if (distance < min_distance)
+                        {
+                            //if depth out of arm range, keep the orientation
+                            var angle = Mathf.Atan(this.position.y / this.position.z) + Mathf.PI / 2;
+                            position_result.y = 177 * Mathf.Sin(angle);
+                            position_result.z = 177 * Mathf.Cos(angle);
+                        }
+                        else if (distance > max_distance)
+                        {
+                            //if depth out of arm range, keep the orientation
+                            var angle = Mathf.Atan(this.position.y / this.position.z) + Mathf.PI / 2;
+                            position_result.y = 245 * Mathf.Sin(angle);
+                            position_result.z = 245 * Mathf.Cos(angle);
+                        }
+                        // distance, height
+                        content += "p" + position_result.ToString("F2").Replace("(", "").Replace(")", "").Replace(" ", "");
+                    }
+                }
+                if (requireUpdate_gripper)
+                {
+                    requireUpdate_gripper = false;
+                    //content = this.grip ? "u" : "g"; // ungrip, grip
+                    content += "g";
+                    this.grip = false;
                 }
                 // send control command only if any value changes.
                 if (content != "")
