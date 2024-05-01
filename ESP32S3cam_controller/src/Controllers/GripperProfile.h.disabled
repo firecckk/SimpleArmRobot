@@ -1,0 +1,15 @@
+#include <PID_v1.h>
+
+class GripperProfile {
+    public:
+    GripperProfile(float P, float I, float D, float VelocityMax);
+    float update(int current_value, int target_value);
+
+    private:
+    float Input, Output, setPoint;
+    float P,I,D;
+    float VelocityMax;
+    float position;
+    float oldPosition;
+    //PID pid_controller;
+};

@@ -1,7 +1,8 @@
 #include "MqttClient.h"
 
 // MQTT Broker
-const char *mqtt_broker = "192.168.31.22";
+//const char *mqtt_broker = "192.168.31.22";
+const char *mqtt_broker = "192.168.43.31";
 const char *mqtt_username = "esp32";
 const char *mqtt_password = "esp32client";
 const int mqtt_port = 1883;
@@ -42,43 +43,46 @@ void solveForVectors(char * str, unsigned int len) {
         char type=str[0];
         Vector3 * vector;
         switch(type) {
-            case 'o':
+            case 'o': // orientation
             vector = &state::orientation;
+            state::require_update = true;
             break;
-            case 'p':
+            case 'p': // position
             vector = &state::position;
+            state::require_update = true;
             break;
-            case 'm':
+            case 'm': // movement
             vector = &state::movement;
+            state::move_update = true;
             break;
-            case 'd':
+            case 'd': // debug
             vector = &state::debug;
             break;
+            case 'g': // grabbing
+            state::grab = true;
+            str++;
+            continue;
         }
         str++;
         vector->x = std::strtod(str, &end);
-    Serial.print("x: ");Serial.println(vector->x);
         str = end + 1;
         vector->y = std::strtod(str, &end);
-    Serial.print("y: ");Serial.println(vector->y);
         str = end + 1;
         vector->z = std::strtod(str, &end);
-    Serial.print("z: ");Serial.println(vector->z);
         str = end;
     }
 }
 
 void callback(char *topic, byte *payload, unsigned int length) {
-    Serial.print("Message arrived in topic: ");
-    Serial.println(topic);
-    Serial.print("Message:");
-    for (int i = 0; i < length; i++) {
-        Serial.print((char) payload[i]);
-    }
-    Serial.println();
-    Serial.println("-----------------------");
+    //Serial.print("Message arrived in topic: ");
+    //Serial.println(topic);
+    //Serial.print("Message:");
+    //for (int i = 0; i < length; i++) {
+    //    Serial.print((char) payload[i]);
+    //}
+    //Serial.println();
+    //Serial.println("-----------------------");
     solveForVectors((char *) payload, length);
-    state::require_update = true;
 }
 
 void MqttClientLoop() {

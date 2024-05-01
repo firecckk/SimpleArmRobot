@@ -9,9 +9,10 @@ class BasicController {
         void update();
         void moveTo(float angle);
         float getCurrentAngle();
+        void setFixedAngle(float angle);
         void setAngleRange(float min_angle, float max_angle);
 
-    private:
+    protected:
         ServoMotor * joint;
         MotionProfile * profile;
         float target_angle;

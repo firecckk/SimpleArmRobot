@@ -9,6 +9,13 @@ void BasicController::setAngleRange(float min, float max) {
     max_angle = max;
 }
 
+void BasicController::setFixedAngle(float angle) {
+    current_angle = angle;
+    //profile->setState(angle, 0);
+    profile->setOldState(angle, 0);
+    joint->setAngle(angle);
+};
+
 void BasicController::update() {
     current_angle = (float) profile->update(target_angle);
     joint->setAngle(current_angle);

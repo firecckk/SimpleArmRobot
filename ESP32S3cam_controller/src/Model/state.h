@@ -1,3 +1,4 @@
+#pragma once
 #include "Vector3.h"
 #include "IK.h"
 /*
@@ -17,7 +18,9 @@ public:
     static Vector3 debug; // for debug purpose
     
     static float jointAngles[6];
+    static bool grab;
     static bool require_update;
+    static bool move_update;
 
     static float get_pitch();
     static float get_yaw();
@@ -26,6 +29,7 @@ public:
     static float get_depth();
     static float get_move_x();
     static float get_move_y();
+    static float get_move_roll();
     static float get_gripper_angle();
 
     static void update(); // convert state space to joint space

@@ -1,0 +1,10 @@
+#include "GripperProfile.h"
+
+GripperProfile::GripperProfile(float P, float I, float D, float VelocityMax)
+        : P(P), I(I), D(D), VelocityMax(VelocityMax) {
+            //pid_controller = PID()
+        };
+
+float GripperProfile::update(int current_value, int target_value) {
+
+};

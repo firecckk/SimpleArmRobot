@@ -178,6 +178,16 @@ void MotionProfile::setCompFactor(int aFactor) {
 	compFactor = aFactor;
 }
 
+void MotionProfile::setState(float position, float velocity) {
+	position = position;
+	velocity = velocity;
+}
+
+void MotionProfile::setOldState(float position, float velocity) {
+	oldPosition = position;
+	oldVelocity = velocity;
+}
+
 void MotionProfile::reset() {
 	// Reset all state variables
 	position = 0;

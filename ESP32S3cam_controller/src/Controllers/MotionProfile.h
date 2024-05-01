@@ -59,6 +59,8 @@ class MotionProfile {
 		void setCompFactor(int aFactor);
 		void setMaxVelocity(float aMaxVelocity);
 		void setMaxAcceleration(float aMaxVelocity);
+		void setState(float position, float velocity);
+		void setOldState(float position, float velocity);
 		void pause();
 		void reset();
 	private:

@@ -12,16 +12,13 @@
 
 #include "camera_pins.h"
 
-const char* ssid     = "3273_5G";   //input your wifi name
+const char* ssid     = "3273";   //input your wifi name
 const char* password = "Chinesehome";   //input your wifi passwords
 
 void cameraInit(void);
 void startCameraServer();
 
 void VideoWebServer_setup() {
-  Serial.begin(115200);
-  Serial.setDebugOutput(true);
-  Serial.println();
 
   cameraInit();
   
@@ -98,4 +95,14 @@ void cameraInit(void){
   s->set_vflip(s, 1); // flip it back
   s->set_brightness(s, 1); // up the brightness just a bit
   s->set_saturation(s, 0); // lower the saturation
+}
+
+void set_xclk_40MHZ() {
+    sensor_t *s = esp_camera_sensor_get();
+    int res = s->set_xclk(s, LEDC_TIMER_0, 40000000);
+}
+
+void set_xclk_20MHZ() {
+    sensor_t *s = esp_camera_sensor_get();
+    int res = s->set_xclk(s, LEDC_TIMER_0, 20000000);
 }
